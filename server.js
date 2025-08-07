@@ -2,9 +2,14 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const pdf2html = require('pdf2html');
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Enable CORS
+app.use(cors());
 
 // Configure multer for PDF uploads
 const storage = multer.diskStorage({
@@ -38,20 +43,40 @@ app.get('/', (req, res) => {
 });
 
 // PDF to HTML conversion endpoint
-app.post('/api/convert', upload.single('pdf'), (req, res) => {
+app.post('/api/convert', upload.single('pdf'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No PDF file uploaded' });
   }
   
-  // TODO: Implement PDF to HTML conversion
-  res.json({
-    message: 'PDF received (conversion to be implemented)',
-    file: {
-      filename: req.file.filename,
-      originalName: req.file.originalname,
-      size: req.file.size
+  const filePath = req.file.path;
+  
+  try {
+    // Convert PDF to HTML
+    const html = await pdf2html.html(filePath);
+    
+    // Clean up the uploaded file
+    fs.unlinkSync(filePath);
+    
+    res.json({
+      success: true,
+      html: html,
+      file: {
+        originalName: req.file.originalname,
+        size: req.file.size
+      }
+    });
+  } catch (error) {
+    // Clean up the uploaded file on error
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
     }
-  });
+    
+    console.error('PDF conversion error:', error);
+    res.status(500).json({ 
+      error: 'Failed to convert PDF to HTML',
+      details: error.message 
+    });
+  }
 });
 
 // Error handling middleware
