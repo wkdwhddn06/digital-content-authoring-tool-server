@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Enable CORS
-app.use(cors());
+// app.use(cors());
 
 // Configure multer for PDF uploads
 const storage = multer.diskStorage({
@@ -39,7 +39,7 @@ const upload = multer({
 
 // Routes
 app.get('/', (req, res) => {
-  res.json({ message: 'PDF to HTML Conversion Serverdsssd' });
+  res.json({ message: 'PDF to HTML Conversion Server' });
 });
 
 // PDF to HTML conversion endpoint
